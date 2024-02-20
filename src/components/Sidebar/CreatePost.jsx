@@ -204,6 +204,7 @@ function useCreatePost() {
 			comments: [],
 			createdAt: Date.now(),
 			createdBy: authUser.uid,
+			username: authUser.username,
 		};
 
 		try {

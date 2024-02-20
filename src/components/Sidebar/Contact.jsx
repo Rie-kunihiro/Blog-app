@@ -118,6 +118,7 @@ const Contact = () => {
 							/>
 							<Textarea
 								mt={4}
+								type="text"
 								name="message"
 								placeholder="Message"
 								cols="30"
