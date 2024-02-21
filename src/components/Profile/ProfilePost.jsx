@@ -29,6 +29,7 @@ import { arrayRemove, deleteDoc, doc, updateDoc } from "firebase/firestore";
 import usePostStore from "../../store/postStore";
 import Caption from "../Comment/Caption";
 
+
 const ProfilePost = ({ post }) => {
 	const { isOpen, onOpen, onClose } = useDisclosure();
 	const userProfile = useUserProfileStore((state) => state.userProfile);
@@ -37,6 +38,8 @@ const ProfilePost = ({ post }) => {
 	const [isDeleting, setIsDeleting] = useState(false);
 	const deletePost = usePostStore((state) => state.deletePost);
 	const decrementPostsCount = useUserProfileStore((state) => state.deletePost);
+	const [postStatus, setPostStatus] = useState(post.status || "available"); // Initialize post status
+
 
 	const handleDeletePost = async () => {
 		if (!window.confirm("Are you sure you want to delete this post?")) return;
@@ -62,6 +65,18 @@ const ProfilePost = ({ post }) => {
 		}
 	};
 
+	const handleStatusChange = async (status) => {
+		try {
+			const postRef = doc(firestore, "posts", post.id);
+			await updateDoc(postRef, { status }); // Update post status in Firestore
+			setPostStatus(status); // Update the local state
+			showToast("Success", "Post status updated successfully", "success");
+		} catch (error) {
+			showToast("Error", error.message, "error");
+		}
+	};
+
+	console.log(post);
 	return (
 		<>
 			<GridItem
@@ -152,23 +167,22 @@ const ProfilePost = ({ post }) => {
 											<MdDelete size={20} cursor='pointer' />
 										</Button>
 									)}
+
+
 								</Flex>
 								<Divider my={4} bg={"gray.500"} />
 
 								<VStack w='full' alignItems={"start"} maxH={"350px"} overflowY={"auto"}>
-									{/* CAPTION */}
-									{post.caption && <Caption post={post} />}
+
 									{/* TITLE */}
-									
-									{/* TITLE */}
-									{post.title && (
-										<Text fontWeight={"bold"} fontSize={18} mb={2}>
-											Title: {post.title}
+									{post.caption && (
+										<Text fontWeight={"bold"} fontSize={16} mb={2}>
+											Caption: {post.caption}
 										</Text>
 									)}
 									{/* DESCRIPTION */}
 									{post.description && (
-										<Text fontSize={16} mb={2}>
+										<Text fontSize={14} mb={2}>
 											Description: {post.description}
 										</Text>
 									)}
@@ -180,21 +194,48 @@ const ProfilePost = ({ post }) => {
 									)}
 									{/* CONDITION */}
 									{post.condition && (
-										<Text fontSize={16} mb={2}>
+										<Text fontSize={14} mb={2}>
 											Condition: {post.condition}
 										</Text>
 									)}
 									{/* PRICE */}
 									{post.price && (
-										<Text fontSize={16} mb={2}>
+										<Text fontSize={14} mb={2}>
 											Price: {post.price}
 										</Text>
 									)}
+									{postStatus && (
+										<Text fontSize={14} mb={2} 	
+										backgroundColor={postStatus === 'available' ? 'green' : 'red'}>
+											Status: {postStatus}
+										</Text>
+									)}
+									<Divider my={4} bg={"gray.8000"} />
+
 									{post.comments.map((comment) => (
 										<Comment key={comment.id} comment={comment} />
 									))}
+
+									{authUser?.uid === userProfile.uid && (
+										<div style={{ marginTop: '10px' }}>
+											<span>Status:</span>
+											<select
+												value={postStatus}
+												onChange={(e) => handleStatusChange(e.target.value)}
+												style={{
+													backgroundColor: postStatus === 'available' ? 'green' : 'red',
+													color: 'white',
+													fontWeight: 'bold',
+													borderRadius: '4px',
+													padding: '5px',
+												}}
+											>
+												<option value="available">Available</option>
+												<option value="sold">Sold</option>
+											</select>
+										</div>
+									)}
 								</VStack>
-								<Divider my={4} bg={"gray.8000"} />
 
 								<PostFooter isProfilePage={true} post={post} />
 							</Flex>
@@ -202,6 +243,7 @@ const ProfilePost = ({ post }) => {
 					</ModalBody>
 				</ModalContent>
 			</Modal>
+
 		</>
 	);
 };
